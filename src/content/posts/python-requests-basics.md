@@ -2,7 +2,7 @@
 title: '伟大的 requests 库'
 date: 2026-10-30
 category: knowledge
-tags: ['python', 'requests', 'http']
+tags: ['python', 'requests', 'http', 'web', 'basics']
 summary: 'Python requests 入门笔记：GET/POST、params、headers、cookies、timeout、Session，以及几个容易出错的地方。'
 ---
 

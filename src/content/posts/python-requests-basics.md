@@ -3,7 +3,7 @@ title: '伟大的 requests 库'
 date: 2026-10-30
 category: knowledge
 tags: ['python', 'requests', 'http']
-summary: 'Python requests 入门：从 GET/POST 到 params、headers、cookies、timeout 和 Session，附几个新手最容易踩的坑。'
+summary: 'Python requests 入门笔记：GET/POST、params、headers、cookies、timeout、Session，以及几个容易出错的地方。'
 ---
 
 > 你知道吗？requests 是 Python 里最受欢迎的第三方 HTTP 库。
@@ -146,7 +146,7 @@ response = requests.get(url, cookies=cookies_data)
 
 扔一个 cookie，yummy！
 
-> ⚠️ 上面是编的假值。真实的 Cookie / token / 密码**不要写进代码，更不要截图发到博客里**——这东西泄露一次就得改密码。
+> 上面是编的假值。真实的 Cookie / token 我一般不写进代码，也不截图——万一图里带着，等于把登录状态公开了。
 
 #### timeout
 
@@ -162,7 +162,7 @@ except requests.exceptions.Timeout:
     print("请求超时了，服务器太慢了！")
 ```
 
-防止服务器一直没响应而卡在那里。**建议每个请求都带上 `timeout`**，不写的话默认是等到底。
+防止服务器一直没响应而卡在那里。不写 `timeout` 的话，requests 默认会一直等下去。
 
 ### 4. 发送 POST 请求
 
@@ -215,7 +215,7 @@ print(r.json())
 
 它还会复用底层的 TCP 连接，连续请求同一个站时更快。
 
-### 6. 几个新手常踩的坑
+### 6. 几个容易出错的地方
 
 **① 中文乱码**
 
@@ -246,11 +246,13 @@ if "application/json" in r.headers.get("Content-Type", ""):
 
 ## 三、小结
 
-把这几件事做好，日常八成场景就够了：
+这篇笔记记了这些：
 
-1. 每个请求都带 `timeout`
-2. 拿数据前先 `raise_for_status()` 或检查 `status_code`
-3. 中文页面记得处理 `encoding`
-4. 要连续操作同一个站，用 `Session` 而不是反复 `requests.get()`
+- requests 能做什么：发 GET / POST 请求，携带 params、headers、cookies、data / json、timeout
+- 请求发出去之后拿到的 `response` 对象，常用的属性和方法有哪几个
+- GET 的四种常用参数：`params`、`headers`、`cookies`、`timeout`，各自的写法和作用
+- POST 的两种提交方式：表单（`data=`）和 JSON（`json=`），以及两者的区别
+- 用 `Session` 让多次请求共享 cookie 和连接
+- 几个容易出错的地方：中文编码、状态码没检查、对非 JSON 响应调 `.json()`、URL 少斜杠
 
-再往下是认证（Basic / Bearer）、代理池、并发，等真开始写爬虫再补。
+还没写到的是认证（Basic / Bearer）、代理、并发，这些等以后用到再补。

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# 与 src/site.config.mjs 里的 url 保持一致
+Sitemap: https://wei-erer.github.io/sec-wei/sitemap-index.xml

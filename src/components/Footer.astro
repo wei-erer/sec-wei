@@ -1,0 +1,37 @@
+---
+import site from '../site.config.mjs';
+import { withBase } from '../lib/utils.js';
+
+const year = new Date().getFullYear();
+const start = site.since && site.since !== year ? `${site.since}–${year}` : `${year}`;
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-status">
+      <span class="ok">[ OK ]</span>
+      <span>all systems nominal</span>
+      <span class="sep">·</span>
+      <span>uptime since {site.since}</span>
+      {
+        site.analytics.enabled && (
+          <>
+            <span class="sep">·</span>
+            <span>
+              <span id="busuanzi_value_site_pv">0</span> views
+            </span>
+          </>
+        )
+      }
+    </div>
+
+    <div class="footer-links">
+      {site.socials.map((s) => <a href={s.href} rel="noopener">{s.label}</a>)}
+      <a href={withBase('/archive/')}>归档</a>
+    </div>
+
+    <div class="footer-copy">
+      © {start} {site.title} · Built with Astro · Hosted on GitHub Pages
+    </div>
+  </div>
+</footer>

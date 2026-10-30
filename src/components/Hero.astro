@@ -1,0 +1,236 @@
+---
+import site from '../site.config.mjs';
+import { withBase } from '../lib/utils.js';
+
+const { postCount = 0, catCount = 0, tagCount = 0, since = '' } = Astro.props;
+const t = site.terminal;
+const prompt = `${t.host}@${t.user}:~$`;
+---
+
+<section class="hero">
+  <canvas class="hero-rain" data-rain aria-hidden="true"></canvas>
+  <div class="hero-sweep" aria-hidden="true"></div>
+  <span class="hero-corner tl" aria-hidden="true"></span>
+  <span class="hero-corner tr" aria-hidden="true"></span>
+  <span class="hero-corner bl" aria-hidden="true"></span>
+  <span class="hero-corner br" aria-hidden="true"></span>
+
+  <div class="hero-left">
+    <p class="hero-kicker">
+      <span class="slash">//</span>
+      {site.tagline}
+      <span class="slash">/</span>
+      EST. {site.since}
+    </p>
+
+    <h1 class="hero-wordmark">
+      sec<span class="paren">(wei)</span>
+    </h1>
+
+    <p class="hero-title">
+      记录每一次<span class="accent">踩坑</span>，<br />
+      也记录想明白的<span class="accent">那一瞬间</span>。
+    </p>
+
+    <p class="hero-sub">
+      JNSEC 成员。写的是过程，不是结论——<br />
+      包括那些走不通的路。
+    </p>
+
+    <div class="hero-stats">
+      <span><b>{since}</b> 至今</span>
+      <span class="hero-stat-link"><a href={withBase('/archive/')}>全部文章 →</a></span>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="term" data-term>
+      <div class="term-bar">
+        <span class="dot red"></span>
+        <span class="dot amber"></span>
+        <span class="dot green"></span>
+        <span class="term-title">{t.host}@{t.user}: ~ — zsh</span>
+      </div>
+
+      <div class="term-body">
+        <div class="term-step">
+          <div class="term-line">
+            <span class="p">{prompt}</span> <span class="cmd" data-text="cat ~/.profile"></span>
+            <span class="term-caret" aria-hidden="true"></span>
+          </div>
+          <div class="term-out">
+            <dl class="term-kv">
+              <dt>name</dt>
+              <dd>{t.name}</dd>
+              <dt>focus</dt>
+              <dd class="hl">{t.focus}</dd>
+              <dt>org</dt>
+              <dd>{t.org}</dd>
+              <dt>motto</dt>
+              <dd>{t.motto}</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="term-step">
+          <div class="term-line">
+            <span class="p">{prompt}</span> <span class="cmd" data-text="status --brief"></span>
+            <span class="term-caret" aria-hidden="true"></span>
+          </div>
+          <div class="term-out">
+            <dl class="term-kv term-kv-stats">
+              <dt>posts</dt>
+              <dd>{postCount}</dd>
+              <dt>tags</dt>
+              <dd>{tagCount}</dd>
+              <dt>categories</dt>
+              <dd>{catCount}</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="term-line term-idle">
+          <span class="p">{prompt}</span> <span class="term-caret" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="term-status">
+        <span class="live">connected</span>
+        <span>utf-8</span>
+        <span>zsh · 5.9</span>
+        <span class="right">~/posts</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector('[data-term]');
+
+  if (root) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const steps = [...root.querySelectorAll('.term-step')];
+
+    if (!reduce && steps.length) {
+      root.classList.add('js');
+      steps.forEach((s) => {
+        s.querySelector('.cmd').textContent = '';
+        s.querySelector('.term-line')?.classList.add('typing');
+      });
+      root.querySelector('.term-idle')?.classList.add('typing');
+
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      const typeLine = async (step) => {
+        const cmd = step.querySelector('.cmd');
+        const text = cmd.dataset.text || '';
+        const line = step.querySelector('.term-line');
+        const out = step.querySelector('.term-out');
+
+        for (let i = 0; i < text.length; i++) {
+          cmd.textContent += text[i];
+          await sleep(text[i] === ' ' ? 34 : 26);
+        }
+        line?.classList.remove('typing');
+        await sleep(120);
+        out?.classList.add('show');
+        await sleep(180);
+      };
+
+      (async () => {
+        await sleep(420);
+        for (const step of steps) await typeLine(step);
+        root.querySelector('.term-idle')?.classList.add('done');
+      })();
+    }
+  }
+
+  /* ── 背景：琥珀色数据雨（低透明度，不抢正文）────────────── */
+  const rainCanvas = document.querySelector('[data-rain]');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (rainCanvas && !reduced) {
+    const ctx = rainCanvas.getContext('2d');
+    const glyphs = '01ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂ$#%&*+=/<>{}[]'.split('');
+    const FONT = 13;
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+    // 数据雨颜色跟随主题变量，换配色时不用改这里
+    const css = getComputedStyle(document.documentElement);
+    const glowRgb = (css.getPropertyValue('--glow-rgb') || '255, 176, 0').trim();
+    const softHex = (css.getPropertyValue('--accent-soft') || '#ffcb66').trim();
+    const hexToRgb = (h) => {
+      const v = h.replace('#', '');
+      const full = v.length === 3 ? v.split('').map((c) => c + c).join('') : v;
+      const n = parseInt(full, 16);
+      return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+    };
+    const rainMain = `rgba(${glowRgb}, 0.28)`;
+    const rainHot = `rgba(${hexToRgb(softHex)}, 0.7)`;
+
+    let w = 0;
+    let h = 0;
+    let drops = [];
+    let raf = 0;
+    let last = 0;
+
+    const resize = () => {
+      const rect = rainCanvas.getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
+      rainCanvas.width = Math.max(1, Math.floor(w * DPR));
+      rainCanvas.height = Math.max(1, Math.floor(h * DPR));
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      drops = Array.from({ length: Math.ceil(w / FONT) }, () => Math.random() * -45);
+      ctx.clearRect(0, 0, w, h);
+    };
+
+    const frame = (t) => {
+      raf = requestAnimationFrame(frame);
+      if (document.hidden || t - last < 52) return;
+      last = t;
+
+      // 用 destination-out 让旧字符渐隐，保持画布透明（不挡住点阵背景）
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+
+      ctx.font = `${FONT}px "JetBrains Mono", monospace`;
+      for (let i = 0; i < drops.length; i++) {
+        const x = i * FONT;
+        const y = Math.floor(drops[i]) * FONT;
+        ctx.fillStyle = Math.random() > 0.96 ? rainHot : rainMain;
+        ctx.fillText(glyphs[(Math.random() * glyphs.length) | 0], x, y);
+        drops[i] += 0.75;
+        if (y > h && Math.random() > 0.972) drops[i] = 0;
+      }
+    };
+
+    const start = () => {
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+    const stop = () => {
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+
+    resize();
+    start();
+
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 200);
+    });
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(
+        (entries) => (entries[0].isIntersecting ? start() : stop()),
+        { threshold: 0 }
+      ).observe(rainCanvas);
+    }
+  }
+</script>

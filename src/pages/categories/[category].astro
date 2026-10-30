@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostRow from '../../components/PostRow.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import site from '../../site.config.mjs';
+import { byDateDesc, categoryOf, withBase } from '../../lib/utils.js';
+
+// 用配置里的全部分类生成页面：即使某个分类暂时没有文章，卡片点进去也不会 404
+export async function getStaticPaths() {
+  return site.categories.map((c) => ({ params: { category: c.slug }, props: { slug: c.slug } }));
+}
+
+const { slug } = Astro.props;
+const cat = categoryOf(slug);
+
+const posts = (
+  await getCollection('posts', ({ data }) => !data.draft && data.category === slug)
+).sort(byDateDesc);
+---
+
+<BaseLayout title={`分类 · ${cat.label}`} description={cat.desc || `分类 ${cat.label} 下的全部文章`}>
+  <div class="container">
+    <header class="page-head">
+      <p class="kicker">// category / {cat.slug}</p>
+      <h1>{cat.label}</h1>
+      <p>{cat.desc} · 共 {posts.length} 篇</p>
+    </header>
+
+    <div class="post-list" style="margin-top:14px">
+      {posts.map((post, i) => <PostRow post={post} index={i} />)}
+    </div>
+
+    {
+      posts.length === 0 && (
+        <EmptyState
+          cmd={`ls ~/posts/${cat.slug}`}
+          out="# (empty)"
+          title={`${cat.label}还没有文章`}
+          sub="这个方向的文章还在攒。可以先看别的分类，或者回首页。"
+        />
+      )
+    }
+
+    <p style="margin-top:30px">
+      <a href={withBase('/categories/')}>← 全部分类</a>
+    </p>
+  </div>
+</BaseLayout>

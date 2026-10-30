@@ -1,0 +1,54 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostRow from '../components/PostRow.astro';
+import EmptyState from '../components/EmptyState.astro';
+import { byDateDesc } from '../lib/utils.js';
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(byDateDesc);
+
+const years = [];
+const map = new Map();
+for (const post of posts) {
+  const y = new Date(post.data.date).getFullYear();
+  if (!map.has(y)) {
+    map.set(y, []);
+    years.push(y);
+  }
+  map.get(y).push(post);
+}
+---
+
+<BaseLayout title="归档" description="按时间倒序排列的全部文章。">
+  <div class="container">
+    <header class="page-head">
+      <p class="kicker">// archive</p>
+      <h1>全部文章</h1>
+      <p>find ~/posts -type f · 共 {posts.length} 篇</p>
+    </header>
+
+    {
+      years.map((y) => (
+        <section class="year-group">
+          <div class="year-label">{y}</div>
+          <div class="post-list">
+            {map.get(y).map((post, i) => (
+              <PostRow post={post} index={i} />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    {
+      !posts.length && (
+        <EmptyState
+          cmd="find ~/posts -type f"
+          out="# (nothing found)"
+          title="还没有文章"
+          sub="所有文章按年份归档，第一篇发布后这里就会长出来。"
+        />
+      )
+    }
+  </div>
+</BaseLayout>

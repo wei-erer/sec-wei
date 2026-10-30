@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import { withBase } from '../../lib/utils.js';
+
+const posts = await getCollection('posts', ({ data }) => !data.draft);
+const counts = new Map();
+for (const post of posts) {
+  for (const t of post.data.tags) counts.set(t, (counts.get(t) || 0) + 1);
+}
+const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-CN'));
+---
+
+<BaseLayout title="标签" description="所有标签，按文章数量排序。">
+  <div class="container">
+    <header class="page-head">
+      <p class="kicker">// tags</p>
+      <h1>标签</h1>
+      <p>{tags.length} 个标签 · 越靠前写得越多</p>
+    </header>
+
+    <div class="tag-cloud">
+      {
+        tags.map(([t, n], i) => (
+          <a
+            class="tag-item reveal"
+            href={withBase(`/tags/${encodeURIComponent(t)}/`)}
+            style={`transition-delay:${Math.min(i * 20, 400)}ms`}
+          >
+            <span>{t}</span>
+            <span class="n">{n}</span>
+          </a>
+        ))
+      }
+    </div>
+
+    {
+      !tags.length && (
+        <EmptyState
+          cmd="tags --list"
+          out="# (no tags)"
+          title="还没有标签"
+          sub="标签从文章的 frontmatter 里自动收集，写第一篇文章之后就会出现。"
+        />
+      )
+    }
+  </div>
+</BaseLayout>

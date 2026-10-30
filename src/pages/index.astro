@@ -1,0 +1,98 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import PostRow from '../components/PostRow.astro';
+import EmptyState from '../components/EmptyState.astro';
+import site from '../site.config.mjs';
+import { byDateDesc, isoDate, withBase } from '../lib/utils.js';
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(byDateDesc);
+const latest = posts.slice(0, 6);
+const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) =>
+  a.localeCompare(b, 'zh-CN')
+);
+const cats = site.categories.map((c) => ({
+  ...c,
+  count: posts.filter((p) => p.data.category === c.slug).length,
+}));
+
+// 第一篇的时间，用作终端里的 since（自动，不用手改）
+const firstDate = posts.length ? posts[posts.length - 1].data.date : new Date();
+const since = isoDate(firstDate).slice(0, 7).replace('-', '.');
+---
+
+<BaseLayout>
+  <div class="container">
+    <Hero
+      postCount={posts.length}
+      catCount={cats.filter((c) => c.count > 0).length}
+      tagCount={tags.length}
+      since={since}
+    />
+
+    <section class="section">
+      <div class="section-head">
+        <span class="prompt">$</span><span class="cmd">ls -t ~/posts | head -6</span>
+        <a class="more" href={withBase('/archive/')}>全部文章 →</a>
+      </div>
+
+      {
+        latest.length ? (
+          <div class="post-list">
+            {latest.map((p, i) => (
+              <PostRow post={p} index={i} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            cmd="ls ~/posts"
+            out="# (empty)"
+            title="还没有文章"
+            sub="第一篇还在写。发布之后，这里会自动列出最近的文章。"
+          />
+        )
+      }
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="prompt">$</span><span class="cmd">ls ~/categories</span>
+        <a class="more" href={withBase('/categories/')}>全部分类 →</a>
+      </div>
+
+      <div class="grid-cards">
+        {
+          cats.map((c, i) => (
+            <a class="card reveal" href={withBase(`/categories/${c.slug}/`)} style={`transition-delay:${i * 40}ms`}>
+              <span class="card-title">{c.label}</span>
+              <span class="card-desc">{c.desc}</span>
+              <span class="card-foot">
+                <span class="card-count">{c.count} posts</span>
+                <span>/{c.slug}</span>
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    {
+      tags.length > 0 && (
+        <section class="section" style="padding-bottom:40px">
+          <div class="section-head">
+            <span class="prompt">$</span><span class="cmd">tags --list</span>
+            <a class="more" href={withBase('/tags/')}>全部标签 →</a>
+          </div>
+          <div class="tag-cloud">
+            {tags.slice(0, 18).map((t) => (
+              <a class="tag-item" href={withBase(`/tags/${encodeURIComponent(t)}/`)}>
+                <span>{t}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>

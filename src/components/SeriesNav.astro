@@ -1,0 +1,26 @@
+---
+import { withBase } from '../lib/utils.js';
+
+const { series, posts = [], currentId } = Astro.props;
+const pos = posts.findIndex((p) => p.id === currentId) + 1;
+---
+
+<nav class="series-nav" aria-label={`系列：${series}`}>
+  <div class="series-head">
+    SERIES · {series}
+    <span class="idx">[{pos}/{posts.length}]</span>
+  </div>
+  <ol class="series-list">
+    {
+      posts.map((p) => (
+        <li class:list={[{ current: p.id === currentId }]}>
+          {p.id === currentId ? (
+            <span>{p.data.title}</span>
+          ) : (
+            <a href={withBase(`/posts/${p.id}/`)}>{p.data.title}</a>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

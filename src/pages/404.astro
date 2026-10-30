@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/utils.js';
+---
+
+<BaseLayout title="404" description="页面不存在" noindex>
+  <div class="container">
+    <div class="notfound">
+      <p class="notfound-code" aria-hidden="true">404</p>
+      <h1>SEGFAULT · 路径不存在</h1>
+      <p>
+        你要找的东西要么被删了，要么从来就不在这里。<br />
+        <code>exit code 404</code>
+      </p>
+
+      <pre class="notfound-log">$ find / -name "what-you-need" 2&gt;/dev/null
+# no results
+$ ls ~/posts | head -1
+<span class="cursor-block"></span></pre>
+
+      <p class="notfound-links">
+        <a href={withBase('/')}>← 回首页</a>
+        <span>·</span>
+        <a href={withBase('/archive/')}>看归档</a>
+        <span>·</span>
+        <a href={withBase('/tags/')}>翻标签</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>

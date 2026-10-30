@@ -1,0 +1,28 @@
+---
+import { categoryOf, displayDate, isoDate, readingTime, withBase } from '../lib/utils.js';
+
+const { post, index = 0 } = Astro.props;
+const cat = categoryOf(post.data.category);
+const mins = readingTime(post.body);
+const tags = (post.data.tags || []).slice(0, 4);
+---
+
+<a
+  class="post-row reveal"
+  href={withBase(`/posts/${post.id}/`)}
+  style={`transition-delay:${Math.min(index * 45, 270)}ms`}
+>
+  <time class="post-date" datetime={isoDate(post.data.date)}>{displayDate(post.data.date)}</time>
+
+  <div class="post-main">
+    <h3 class="post-title">{post.data.title}</h3>
+    {post.data.summary && <p class="post-summary">{post.data.summary}</p>}
+    <div class="post-meta">
+      <span class="chip">{cat.label}</span>
+      {tags.map((t) => <span class="tag">{t}</span>)}
+      <span class="tag tag-read">{mins} min</span>
+    </div>
+  </div>
+
+  <span class="post-arrow" aria-hidden="true">→</span>
+</a>

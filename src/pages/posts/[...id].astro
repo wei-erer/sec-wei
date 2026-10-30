@@ -1,0 +1,141 @@
+---
+import 'katex/dist/katex.min.css';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Toc from '../../components/Toc.astro';
+import SeriesNav from '../../components/SeriesNav.astro';
+import Comments from '../../components/Comments.astro';
+import site from '../../site.config.mjs';
+import {
+  byDateDesc,
+  categoryOf,
+  displayDate,
+  isoDate,
+  readingTime,
+  withBase,
+} from '../../lib/utils.js';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+
+const cat = categoryOf(post.data.category);
+const mins = readingTime(post.body);
+
+const all = (await getCollection('posts', ({ data }) => !data.draft)).sort(byDateDesc);
+const pos = all.findIndex((p) => p.id === post.id);
+const older = all[pos + 1];
+const newer = all[pos - 1];
+
+const seriesPosts = post.data.series
+  ? all
+      .filter((p) => p.data.series === post.data.series)
+      .sort(
+        (a, b) =>
+          (a.data.seriesOrder ?? 999) - (b.data.seriesOrder ?? 999) || byDateDesc(a, b)
+      )
+  : [];
+
+const siteRoot = site.url.replace(/\/+$/, '');
+const base = site.base === '/' ? '' : site.base.replace(/\/+$/, '');
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.data.title,
+  description: post.data.summary || site.description,
+  datePublished: isoDate(post.data.date),
+  dateModified: isoDate(post.data.updated || post.data.date),
+  author: { '@type': 'Person', name: site.author.name },
+  publisher: { '@type': 'Organization', name: site.title },
+  mainEntityOfPage: `${siteRoot}${base}/posts/${post.id}/`,
+  keywords: post.data.tags.join(', '),
+};
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.summary || cat.desc || site.description}
+  type="article"
+>
+  <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+
+  <article class="post-wrap">
+    <div class="container">
+      <header class="post-head">
+        <div class="post-head-meta">
+          <a class="chip" href={withBase(`/categories/${cat.slug}/`)}>{cat.label}</a>
+          <time datetime={isoDate(post.data.date)}>{displayDate(post.data.date)}</time>
+          <span class="sep">·</span>
+          <span>{mins} min read</span>
+          {post.data.updated && (
+            <>
+              <span class="sep">·</span>
+              <span>updated {displayDate(post.data.updated)}</span>
+            </>
+          )}
+        </div>
+
+        <h1>{post.data.title}</h1>
+
+        {post.data.summary && <p class="post-desc">{post.data.summary}</p>}
+
+        {
+          post.data.tags.length > 0 && (
+            <div class="post-tagline">
+              {post.data.tags.map((t) => (
+                <a class="tag" href={withBase(`/tags/${encodeURIComponent(t)}/`)}>
+                  {t}
+                </a>
+              ))}
+            </div>
+          )
+        }
+      </header>
+
+      <div class="post-layout">
+        <div class="post-body">
+          <div class="prose">
+            <Content />
+          </div>
+
+          {
+            seriesPosts.length > 1 && (
+              <SeriesNav series={post.data.series} posts={seriesPosts} currentId={post.id} />
+            )
+          }
+
+          <nav class="post-nav" aria-label="上一篇 / 下一篇">
+            {
+              older ? (
+                <a href={withBase(`/posts/${older.id}/`)}>
+                  <span class="dir">← 上一篇</span>
+                  <span class="ttl">{older.data.title}</span>
+                </a>
+              ) : (
+                <span />
+              )
+            }
+            {
+              newer ? (
+                <a class="next" href={withBase(`/posts/${newer.id}/`)}>
+                  <span class="dir">下一篇 →</span>
+                  <span class="ttl">{newer.data.title}</span>
+                </a>
+              ) : (
+                <span />
+              )
+            }
+          </nav>
+        </div>
+
+        <Toc headings={headings} />
+      </div>
+
+      <Comments />
+    </div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,68 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # 仓库还没开过 Pages 时，这一步会自动把它打开（否则 deploy 会失败）
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        # 没用 --frozen-lockfile：本地 pnpm 版本可能和 CI 上的不一致
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build
+        env:
+          ASTRO_TELEMETRY_DISABLED: '1'
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          if [[ "$REPO" == *.github.io ]]; then
+            export SITE_BASE=/
+          else
+            export SITE_BASE="/$REPO/"
+          fi
+          echo "SITE_BASE=$SITE_BASE"
+          pnpm exec astro build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

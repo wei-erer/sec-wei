@@ -1,0 +1,183 @@
+---
+import { withBase } from '../lib/utils.js';
+---
+
+<div
+  class="search-overlay"
+  id="search-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-label="搜索文章"
+>
+  <div class="search-panel">
+    <div class="search-input-row">
+      <span class="search-prompt" aria-hidden="true">&gt;</span>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="搜索标题 / 标签 / 全文…"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        aria-label="搜索关键词"
+      />
+      <span class="search-hint">ESC 关闭 · ↑↓ 选择 · ↵ 打开</span>
+    </div>
+    <div class="search-results" id="search-results" role="listbox" aria-label="搜索结果"></div>
+  </div>
+</div>
+
+<script>
+  const BASE = import.meta.env.BASE_URL || '/';
+  const overlay = document.getElementById('search-overlay');
+  const input = document.getElementById('search-input');
+  const results = document.getElementById('search-results');
+
+  if (overlay && input && results) {
+    let index = null;
+    let list = [];
+    let sel = 0;
+    let loading = false;
+
+    const esc = (s) =>
+      String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+    const mark = (text, tokens) => {
+      let out = esc(text);
+      for (const t of tokens) {
+        if (!t) continue;
+        const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        out = out.replace(re, '<mark>$1</mark>');
+      }
+      return out;
+    };
+
+    async function loadIndex() {
+      if (index || loading) return;
+      loading = true;
+      try {
+        const res = await fetch(`${BASE.replace(/\/$/, '')}/search.json`);
+        index = await res.json();
+      } catch (e) {
+        index = [];
+      } finally {
+        loading = false;
+      }
+    }
+
+    function render() {
+      const q = input.value.trim().toLowerCase();
+      const tokens = q.split(/\s+/).filter(Boolean);
+
+      let items = index || [];
+      if (tokens.length) {
+        items = items
+          .map((it) => {
+            const title = (it.t || '').toLowerCase();
+            const sum = (it.s || '').toLowerCase();
+            const tags = (it.g || []).join(' ').toLowerCase();
+            const body = (it.x || '').toLowerCase();
+            let score = 0;
+            for (const t of tokens) {
+              if (title.includes(t)) score += 6;
+              if (tags.includes(t)) score += 4;
+              if (sum.includes(t)) score += 2.5;
+              if (body.includes(t)) score += 1;
+            }
+            return { it, score };
+          })
+          .filter((x) => x.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 9)
+          .map((x) => x.it);
+      } else {
+        items = items.slice(0, 6);
+      }
+
+      list = items;
+      sel = 0;
+
+      if (!items.length) {
+        const empty = loading
+          ? '检索索引加载中…'
+          : '没有命中。换个关键词，或者去 <a href="' + BASE + 'archive/">归档</a> 里翻。';
+        results.innerHTML = `<div class="search-empty">${empty}</div>`;
+        return;
+      }
+
+      results.innerHTML = items
+        .map(
+          (it, i) => `
+        <a class="search-item${i === 0 ? ' sel' : ''}" href="${it.u}" role="option" aria-selected="${i === 0}">
+          <span class="st">${tokens.length ? mark(it.t, tokens) : esc(it.t)}</span>
+          <span class="sm">${esc(it.c)} · ${(it.g || []).slice(0, 3).map((g) => '#' + g).join(' ')}</span>
+        </a>`
+        )
+        .join('');
+    }
+
+    function moveSel(delta) {
+      const nodes = [...results.querySelectorAll('.search-item')];
+      if (!nodes.length) return;
+      nodes[sel]?.classList.remove('sel');
+      sel = (sel + delta + nodes.length) % nodes.length;
+      nodes[sel]?.classList.add('sel');
+      nodes[sel]?.scrollIntoView({ block: 'nearest' });
+    }
+
+    function open() {
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      input.value = '';
+      results.innerHTML = '<div class="search-empty">检索索引加载中…</div>';
+      loadIndex().then(render);
+      setTimeout(() => input.focus(), 30);
+    }
+
+    function close() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    const isOpen = () => overlay.classList.contains('open');
+
+    document.getElementById('search-open')?.addEventListener('click', open);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+
+    input.addEventListener('input', render);
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        moveSel(1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        moveSel(-1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const target = results.querySelectorAll('.search-item')[sel];
+        if (target) window.location.href = target.getAttribute('href');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const tag = (e.target && e.target.tagName) || '';
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable;
+
+      if (e.key === 'Escape' && isOpen()) {
+        close();
+        return;
+      }
+
+      if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        if (isOpen()) close();
+        else open();
+      }
+    });
+
+    document.addEventListener('search:open', open);
+  }
+</script>

@@ -1,0 +1,20 @@
+---
+/**
+ * 空状态：没有文章/标签/分类内容时统一用它，避免页面上只剩一行灰字。
+ *
+ * <EmptyState cmd="ls ~/posts" title="还没有文章" sub="第一篇还在写。" />
+ */
+const {
+  cmd = 'ls ~/posts',
+  out = '# (empty)',
+  title = '还没有内容',
+  sub = '',
+} = Astro.props;
+---
+
+<div class="empty-state">
+  <pre class="empty-term" aria-hidden="true"><span class="p">$</span> {cmd}
+<span class="cm">{out}</span></pre>
+  <p class="empty-title">{title}</p>
+  {sub && <p class="empty-sub">{sub}</p>}
+</div>

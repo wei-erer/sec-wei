@@ -1,0 +1,67 @@
+---
+import site from '../site.config.mjs';
+import { withBase } from '../lib/utils.js';
+
+const normalize = (p) => {
+  const x = p.replace(/\/index\.html$/, '/');
+  const trimmed = x.replace(/\/+$/, '');
+  return trimmed === '' ? '/' : trimmed;
+};
+
+const current = normalize(Astro.url.pathname);
+const items = site.nav.map((item) => ({
+  ...item,
+  href: withBase(item.href),
+  opt: item.href === '/categories/' || item.href === '/tags/',
+}));
+
+const m = site.title.match(/^([^(]+)(\(.*\))$/);
+const brandMain = m ? m[1] : site.title;
+const brandParen = m ? m[2] : '';
+---
+
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a class="brand" href={withBase('/')} aria-label={`${site.title} 首页`}>
+      {brandMain}<span class="paren">{brandParen}</span><span class="brand-caret" aria-hidden="true"></span>
+    </a>
+
+    <nav class="nav" aria-label="主导航">
+      {
+        items.map((item) => (
+          <a
+            href={item.href}
+            class:list={[{ opt: item.opt }]}
+            aria-current={normalize(item.href) === current ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="topbar-tools">
+      <button class="icon-btn" id="search-open" type="button" aria-label="搜索文章">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.6-3.6"></path>
+        </svg>
+        <kbd aria-hidden="true">/</kbd>
+      </button>
+
+      {
+        site.showThemeToggle && (
+          <button class="icon-btn" id="theme-toggle" type="button" aria-label="切换深浅色主题">
+            <svg class="ic-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"></path>
+            </svg>
+            <svg class="ic-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+            </svg>
+          </button>
+        )
+      }
+    </div>
+  </div>
+</header>

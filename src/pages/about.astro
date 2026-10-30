@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import site from '../site.config.mjs';
+import { withBase } from '../lib/utils.js';
+---
+
+<BaseLayout title="关于" description={site.author.bio}>
+  <div class="container">
+    <header class="page-head">
+      <p class="kicker">// about</p>
+      <h1>关于</h1>
+      <p>whoami · 一个还在信息安全路上爬的人</p>
+    </header>
+
+    <div class="about-grid">
+      <div class="prose">
+        <p>
+          我是 <strong>wei_er</strong>，JNSEC（江南大学信息安全俱乐部）成员，主攻 Web 安全。
+          站名里的 <code>sec</code> 是安全，<code>(wei)</code> 是我。
+        </p>
+
+        <p>
+          这里主要放三类东西：<strong>打靶和复现的过程</strong>、<strong>把某个概念真正想明白的瞬间</strong>，
+          以及<strong>踩过的坑</strong>——尤其是那些搜了半天才在某个 GitHub issue 的第 47 条回复里找到答案的坑。
+        </p>
+
+        <p>
+          我不打算把这里写成教程站。教程网上太多了，缺的是"我当时是怎么卡住的、后来又是怎么绕出来的"。
+          所以文章里会保留失败路径、报错截图和我自己的判断过程，哪怕它们让文章变长。
+        </p>
+
+        <h2>这个站怎么组织</h2>
+        <p>
+          文章不按技术门类分，按<strong>我写它的场景</strong>分：
+        </p>
+        <ul>
+          <li><strong>知识点干货</strong> —— 原理、复现、踩过的坑</li>
+          <li><strong>例会感悟</strong> —— 俱乐部例会听到的、想到的</li>
+          <li><strong>比赛复盘</strong> —— 比赛和靶场，打完再回头看</li>
+          <li><strong>碎碎叨</strong> —— 日常、计划、和学习无关的那些</li>
+        </ul>
+
+        <h2>在写什么</h2>
+        <p>
+          主攻方向是 <strong>Web 安全</strong>，所以大部分干货都在这块：
+        </p>
+        <ul>
+          <li><strong>注入</strong> —— SQLi、NoSQLi、模板注入、命令注入</li>
+          <li><strong>客户端</strong> —— XSS、CSP、DOM 型漏洞、原型链污染</li>
+          <li><strong>服务端</strong> —— SSRF、反序列化、文件上传与包含</li>
+          <li><strong>对抗</strong> —— WAF 绕过、编码与解析差异、请求走私</li>
+        </ul>
+
+        <p>顺手也会写一些别的方向，但密度低得多：</p>
+        <ul>
+          <li><strong>内网渗透</strong> —— 拿到第一个点之后怎么往下走</li>
+          <li><strong>逆向</strong> —— IDA 和样本分析，还在起步</li>
+          <li><strong>密码学</strong> —— 协议实现里的边界问题</li>
+        </ul>
+
+        <h2>关于这个站</h2>
+        <p>
+          静态站，Astro 构建，托管在 GitHub Pages。没有后端、没有数据库、没有追踪脚本——
+          除了你看到的那点荧光绿。所有文章都是 Markdown，写在一个 <code>posts/</code>
+          目录里，构建一次就是一个完整的站点。
+        </p>
+
+        <blockquote>
+          <p>记录不是为了证明自己会，是为了下次忘了的时候能翻回来。</p>
+        </blockquote>
+
+        <h2>联系</h2>
+        <p>
+          有问题或者发现了文中的错误，欢迎到对应文章的评论区指出，或者直接开 issue。
+          我不保证回得快，但一定会看。
+        </p>
+      </div>
+
+      <aside class="about-card">
+        <div class="about-card-head">~/ .profile</div>
+        <dl class="about-card-body" style="margin:0">
+          <dt>handle</dt>
+          <dd>{site.terminal.name}</dd>
+          <dt>org</dt>
+          <dd>{site.terminal.org}</dd>
+          <dt>role</dt>
+          <dd>信息安全学习者</dd>
+          <dt>focus</dt>
+          <dd>Web 安全（主）· 内网 · 逆向</dd>
+          <dt>github</dt>
+          <dd>
+            <a href={site.author.github} rel="noopener">{site.author.github.replace('https://', '')}</a>
+          </dd>
+          <dt>rss</dt>
+          <dd><a href={withBase('/rss.xml')}>/rss.xml</a></dd>
+          <dt>stack</dt>
+          <dd>Astro · GitHub Pages</dd>
+        </dl>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

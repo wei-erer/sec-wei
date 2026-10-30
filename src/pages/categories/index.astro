@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import site from '../../site.config.mjs';
+import { withBase } from '../../lib/utils.js';
+
+const posts = await getCollection('posts', ({ data }) => !data.draft);
+const cats = site.categories.map((c) => ({
+  ...c,
+  count: posts.filter((p) => p.data.category === c.slug).length,
+}));
+---
+
+<BaseLayout title="分类" description="按主题划分的文章分类。">
+  <div class="container">
+    <header class="page-head">
+      <p class="kicker">// categories</p>
+      <h1>分类</h1>
+      <p>{cats.length} 个方向 · 每个方向都在慢慢变厚</p>
+    </header>
+
+    <div class="grid-cards">
+      {
+        cats.map((c, i) => (
+          <a class="card reveal" href={withBase(`/categories/${c.slug}/`)} style={`transition-delay:${i * 40}ms`}>
+            <span class="card-title">{c.label}</span>
+            <span class="card-desc">{c.desc}</span>
+            <span class="card-foot">
+              <span class="card-count">{c.count} posts</span>
+              <span>/{c.slug}</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>

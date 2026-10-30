@@ -3,10 +3,10 @@ title: '伟大的 requests 库'
 date: 2026-10-30
 category: knowledge
 tags: ['python', 'requests', 'http', 'web', 'basics']
-summary: 'Python requests 入门笔记：GET/POST、params、headers、cookies、timeout、Session，以及几个容易出错的地方。'
+summary: 'Python requests 入门笔记：GET/POST、params、headers、cookies、timeout、Session，以及几个容易出错的地方'
 ---
 
-> 你知道吗？requests 是 Python 里最受欢迎的第三方 HTTP 库。
+> 你知道吗？requests 是 Python 里最受欢迎的第三方 HTTP 库
 
 先跑起来，三行就够：
 
@@ -19,7 +19,7 @@ print(r.status_code, len(r.text))
 
 ## 一、requests 可以干什么？
 
-> 用 Python 代码模拟浏览器 / 客户端发送 HTTP 请求，并拿到服务器返回的响应。
+> 用 Python 代码模拟浏览器 / 客户端发送 HTTP 请求，并拿到服务器返回的响应
 
 ### 核心能力：发 HTTP 请求
 
@@ -146,7 +146,7 @@ response = requests.get(url, cookies=cookies_data)
 
 扔一个 cookie，yummy！
 
-> 上面是编的假值。真实的 Cookie / token 我一般不写进代码，也不截图——万一图里带着，等于把登录状态公开了。
+> 上面是编的假值真实的 Cookie / token 我一般不写进代码，也不截图——万一图里带着，等于把登录状态公开了
 
 #### timeout
 
@@ -162,7 +162,7 @@ except requests.exceptions.Timeout:
     print("请求超时了，服务器太慢了！")
 ```
 
-防止服务器一直没响应而卡在那里。不写 `timeout` 的话，requests 默认会一直等下去。
+防止服务器一直没响应而卡在那里不写 `timeout` 的话，requests 默认会一直等下去
 
 ### 4. 发送 POST 请求
 
@@ -196,11 +196,11 @@ response = requests.post("https://httpbin.org/post", json=payload)
 print(response.json())
 ```
 
-`data=` 和 `json=` 的区别：前者发的是表单（`a=1&b=2`），后者发 JSON 字符串并自动设置 `Content-Type`。
+`data=` 和 `json=` 的区别：前者发的是表单（`a=1&b=2`），后者发 JSON 字符串并自动设置 `Content-Type`
 
 ### 5. 保持会话：Session
 
-每次 `requests.get()` 都是独立的，上一次服务器给你的 Cookie 不会带到下一次。要“记住登录状态”，用 `Session`：
+每次 `requests.get()` 都是独立的，上一次服务器给你的 Cookie 不会带到下一次要“记住登录状态”，用 `Session`：
 
 ```python
 import requests
@@ -213,7 +213,7 @@ r = s.get("https://httpbin.org/cookies")                          # 自动带上
 print(r.json())
 ```
 
-它还会复用底层的 TCP 连接，连续请求同一个站时更快。
+它还会复用底层的 TCP 连接，连续请求同一个站时更快
 
 ### 6. 几个容易出错的地方
 
@@ -233,7 +233,7 @@ r.raise_for_status()   # 4xx / 5xx 直接抛异常，不用自己写 if
 
 **③ 对非 JSON 页面调 `response.json()`**
 
-会抛 `ValueError`。先确认一下：
+会抛 `ValueError`先确认一下：
 
 ```python
 if "application/json" in r.headers.get("Content-Type", ""):
@@ -242,7 +242,7 @@ if "application/json" in r.headers.get("Content-Type", ""):
 
 **④ 路径少个斜杠就是 404**
 
-`/about` 和 `/about/` 在很多站点上是两个地址。404 的时候先检查这个。
+`/about` 和 `/about/` 在很多站点上是两个地址404 的时候先检查这个
 
 ## 三、小结
 
@@ -255,4 +255,4 @@ if "application/json" in r.headers.get("Content-Type", ""):
 - 用 `Session` 让多次请求共享 cookie 和连接
 - 几个容易出错的地方：中文编码、状态码没检查、对非 JSON 响应调 `.json()`、URL 少斜杠
 
-还没写到的是认证（Basic / Bearer）、代理、并发，这些等以后用到再补。
+还没写到的是认证（Basic / Bearer）、代理、并发，这些等以后用到再补

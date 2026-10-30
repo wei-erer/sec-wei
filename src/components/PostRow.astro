@@ -4,7 +4,7 @@ import { categoryOf, displayDate, isoDate, readingTime, withBase } from '../lib/
 const { post, index = 0 } = Astro.props;
 const cat = categoryOf(post.data.category);
 const mins = readingTime(post.body);
-const tags = (post.data.tags || []).slice(0, 4);
+const tags = (post.data.tags || []).slice(0, 6);
 ---
 
 <a

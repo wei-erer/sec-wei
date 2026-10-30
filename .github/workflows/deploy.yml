@@ -30,11 +30,8 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      # 仓库还没开过 Pages 时，这一步会自动把它打开（否则 deploy 会失败）
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      # 注意：Pages 需要在仓库 Settings → Pages 里手动开启一次
+      # （GITHUB_TOKEN 没有管理员权限，无法自动创建 Pages 站点）
 
       - name: Install dependencies
         # 没用 --frozen-lockfile：本地 pnpm 版本可能和 CI 上的不一致

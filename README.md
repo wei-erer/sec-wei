@@ -61,6 +61,16 @@ draft: false            # 可选：true 则构建时跳过
 ![示意图](/images/xxx.png)
 ```
 
+### 发布上线（用 GitHub Desktop，不用命令行）
+
+1. 写完 md，双击 `start.cmd` 在本地看一眼（`http://127.0.0.1:4321`）
+2. 打开 **GitHub Desktop**，左边会列出你改动的文件
+3. 左下角 **Summary** 填一句说明（如 `新增：SSRF 复盘`）→ 点 **Commit to main**
+4. 右上角点 **Push origin**
+5. 等 1–2 分钟，GitHub Actions 自动构建，网站更新
+
+想省事也可以直接把 md 交给 AI，让它写文件、构建、提交、推送。
+
 ---
 
 ## 配置
